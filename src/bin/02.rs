@@ -56,7 +56,32 @@ pub fn part_one(input: &str) -> Option<u32> {
 }
 
 pub fn part_two(input: &str) -> Option<u32> {
-    None
+    let safe_reports = input
+        .lines()
+        .map(|line| {
+            // parse to numbers
+            let numbers: Vec<u32> = line
+                .split_whitespace()
+                .map(|number| number.trim().parse::<u32>().unwrap())
+                .collect();
+
+            // create pairs using all numbers
+            let pairs = numbers.clone().into_iter().tuple_windows();
+
+            // create pairs with leaving numbers out
+            let mut pairs_with_fault_toleration =
+                numbers.clone().into_iter().enumerate().map(|(index, _)| {
+                    let mut cloned = numbers.clone();
+                    cloned.remove(index);
+                    cloned.into_iter().tuple_windows::<(u32, u32)>()
+                });
+
+            is_valid_pair_sequence(pairs) || pairs_with_fault_toleration.any(is_valid_pair_sequence)
+        })
+        .map(|valid| valid as u32)
+        .sum::<u32>();
+
+    Some(safe_reports)
 }
 
 #[cfg(test)]
