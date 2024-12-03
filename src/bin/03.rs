@@ -19,7 +19,26 @@ pub fn part_one(input: &str) -> Option<u32> {
 }
 
 pub fn part_two(input: &str) -> Option<u32> {
-    None
+    let re = Regex::new(r"mul\((\d+),(\d+)\)|do\(\)|don't\(\)").unwrap();
+
+    let total = re
+        .captures_iter(input)
+        .fold((0, true), |(total, enabled), c| {
+            match c.get(0).unwrap().as_str() {
+                "do()" => (total, true),
+                "don't()" => (total, false),
+                _ => (
+                    match enabled {
+                        true => total + get_multiplied_value_from_capture(c),
+                        false => total,
+                    },
+                    enabled,
+                ),
+            }
+        })
+        .0;
+
+    Some(total)
 }
 
 #[cfg(test)]
