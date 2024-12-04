@@ -11,6 +11,42 @@ pub struct Location {
     pub y: u32,
 }
 
+impl Location {
+    pub fn top_left(&self) -> Option<Location> {
+        if (self.x == 0 || self.y == 0) {
+            return None;
+        }
+        Some(Location {
+            x: self.x - 1,
+            y: self.y - 1,
+        })
+    }
+    pub fn top_right(&self) -> Option<Location> {
+        if (self.y == 0) {
+            return None;
+        }
+        Some(Location {
+            x: self.x + 1,
+            y: self.y - 1,
+        })
+    }
+    pub fn bottom_left(&self) -> Option<Location> {
+        if self.x == 0 {
+            return None;
+        }
+        Some(Location {
+            x: self.x - 1,
+            y: self.y + 1,
+        })
+    }
+    pub fn bottom_right(&self) -> Option<Location> {
+        Some(Location {
+            x: self.x + 1,
+            y: self.y + 1,
+        })
+    }
+}
+
 #[derive(PartialEq, Clone, Debug)]
 pub struct Grid<T> {
     pub locations: HashMap<Location, T>,
@@ -22,6 +58,10 @@ where
 {
     pub fn get(&self, x: u32, y: u32) -> Option<&T> {
         self.locations.get(&Location { x, y })
+    }
+
+    pub fn get_by_location(&self, loc: &Location) -> Option<&T> {
+        self.locations.get(&loc)
     }
 
     pub fn max_location(&self) -> &Location {

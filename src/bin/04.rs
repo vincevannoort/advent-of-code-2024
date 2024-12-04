@@ -1,6 +1,6 @@
 use advent_of_code::{Grid, Location};
 use indoc::indoc;
-use itertools::Itertools;
+use itertools::{any, Itertools};
 use std::collections::HashMap;
 
 advent_of_code::solution!(4);
@@ -108,7 +108,43 @@ pub fn part_one(input: &str) -> Option<u32> {
 }
 
 pub fn part_two(input: &str) -> Option<u32> {
-    None
+    let grid = parse(input);
+    grid.display();
+
+    let patterns = grid
+        .locations
+        .iter()
+        .filter(|(_, c)| **c == 'A')
+        .filter_map(|(loc, _)| {
+            let top_left = grid.get_by_location(&loc.top_left()?)?;
+            let top_right = grid.get_by_location(&loc.top_right()?)?;
+            let bottom_left = grid.get_by_location(&loc.bottom_left()?)?;
+            let bottom_right = grid.get_by_location(&loc.bottom_right()?)?;
+
+            match (top_left, top_right, bottom_right, bottom_left) {
+                // M.M
+                // .A.
+                // S.S
+                ('M', 'M', 'S', 'S') => Some(true),
+                // S.M
+                // .A.
+                // S.M
+                ('S', 'M', 'M', 'S') => Some(true),
+                // S.S
+                // .A.
+                // M.M
+                ('S', 'S', 'M', 'M') => Some(true),
+                // M.S
+                // .A.
+                // M.S
+                ('M', 'S', 'S', 'M') => Some(true),
+                _ => Some(false),
+            }
+        })
+        .map(|b| b as u32)
+        .sum();
+
+    Some(patterns)
 }
 
 #[cfg(test)]
@@ -124,6 +160,6 @@ mod tests {
     #[test]
     fn test_part_two() {
         let result = part_two(&advent_of_code::template::read_file("examples", DAY));
-        assert_eq!(result, None);
+        assert_eq!(result, Some(9));
     }
 }
