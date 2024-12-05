@@ -72,7 +72,46 @@ pub fn part_one(input: &str) -> Option<u32> {
 }
 
 pub fn part_two(input: &str) -> Option<u32> {
-    None
+    let mut line_iter = input.lines();
+
+    let page_ordering: HashMap<u32, NumbersOrderedAfter> = parse_page_ordering(line_iter.by_ref());
+
+    let result = line_iter
+        // parse numbers
+        .map(|pages_to_produce| {
+            pages_to_produce
+                .split(',')
+                .map(|page| page.parse::<u32>().unwrap())
+                .collect_vec()
+        })
+        .filter_map(|pages_to_produce| {
+            let sorted_pages_to_produce = pages_to_produce
+                .clone()
+                .into_iter()
+                // sort by amount of numbers that have to go after it that are in the pages to produce
+                .sorted_by_key(|page| {
+                    let pages_required_after = match page_ordering.get(page) {
+                        Some(values) => values
+                            .intersection(&HashSet::from_iter(pages_to_produce.clone()))
+                            .count(),
+                        None => 0,
+                    };
+                    Reverse(pages_required_after)
+                })
+                .collect_vec();
+
+            // ignore correctly sorted
+            if pages_to_produce == sorted_pages_to_produce {
+                return None;
+            }
+
+            let middle = &sorted_pages_to_produce.len() / 2;
+            let middle_page = &sorted_pages_to_produce.get(middle).unwrap();
+            Some(**middle_page)
+        })
+        .sum::<u32>();
+
+    Some(result)
 }
 
 #[cfg(test)]
