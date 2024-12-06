@@ -3,7 +3,7 @@ use std::vec::IntoIter;
 use itertools::{Itertools, TupleWindows};
 advent_of_code::solution!(2);
 
-#[derive(PartialEq, Clone, Copy, Debug)]
+#[derive(PartialEq, Clone, Copy, Debug, Eq, Hash, PartialOrd, Ord)]
 enum Direction {
     Increasing,
     Decreasing,
