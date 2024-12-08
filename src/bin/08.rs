@@ -43,6 +43,33 @@ fn place_single_anti_node(
     None
 }
 
+fn place_multiple_anti_nodes(
+    grid: &Grid<char>,
+    left: &Location,
+    right: &Location,
+) -> Vec<Location> {
+    let mut leftx = i32::try_from(left.x).unwrap();
+    let mut lefty = i32::try_from(left.y).unwrap();
+    let dx: i32 = leftx - i32::try_from(right.x).unwrap();
+    let dy: i32 = lefty - i32::try_from(right.y).unwrap();
+    let mut anti_nodes = vec![];
+
+    anti_nodes.push(*left);
+    anti_nodes.push(*right);
+
+    while let (Ok(x), Ok(y)) = (u32::try_from(leftx + dx), u32::try_from(lefty + dy)) {
+        leftx = i32::try_from(x).unwrap();
+        lefty = i32::try_from(y).unwrap();
+        let placement = Location { x, y };
+        if let Some(c) = grid.get_by_location(&placement) {
+            anti_nodes.push(placement);
+        } else {
+            break;
+        }
+    }
+    anti_nodes
+}
+
 pub fn part_one(input: &str) -> Option<u32> {
     let grid = parse(input);
     let antennas = &grid
@@ -82,7 +109,41 @@ pub fn part_one(input: &str) -> Option<u32> {
 }
 
 pub fn part_two(input: &str) -> Option<u32> {
-    None
+    let grid = parse(input);
+    let antennas = &grid
+        .locations
+        .clone()
+        .into_iter()
+        .filter(|(_, c)| *c != '.')
+        .into_group_map_by(|(_, c)| *c)
+        .into_iter()
+        .collect_vec();
+
+    let anti_nodes: HashSet<Location> = antennas
+        .iter()
+        .flat_map(|(_, group)| {
+            let combinations = group
+                .iter()
+                .map(|(location, c)| location)
+                .combinations(2)
+                .collect_vec();
+
+            let t = combinations
+                .iter()
+                .flat_map(|locations| {
+                    let (left, right) = locations.iter().collect_tuple().unwrap();
+                    let left_anti_node = place_multiple_anti_nodes(&grid, left, right);
+                    let right_anti_node = place_multiple_anti_nodes(&grid, right, left);
+                    vec![left_anti_node, right_anti_node]
+                })
+                .flatten()
+                .collect_vec();
+            t
+        })
+        .collect();
+
+    grid.display(Some(&anti_nodes));
+    Some(anti_nodes.len().try_into().unwrap())
 }
 
 #[cfg(test)]
