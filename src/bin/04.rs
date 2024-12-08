@@ -49,7 +49,7 @@ fn count_words(chars: &Vec<&char>) -> usize {
 
 pub fn part_one(input: &str) -> Option<u32> {
     let grid = parse(input);
-    grid.display();
+    grid.display(None);
 
     let max_location = grid.max_location();
 
@@ -109,7 +109,7 @@ pub fn part_one(input: &str) -> Option<u32> {
 
 pub fn part_two(input: &str) -> Option<u32> {
     let grid = parse(input);
-    grid.display();
+    grid.display(None);
 
     let patterns = grid
         .locations
