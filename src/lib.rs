@@ -14,7 +14,7 @@ pub struct Location {
 
 impl Location {
     pub fn top_left(&self) -> Option<Location> {
-        if (self.x == 0 || self.y == 0) {
+        if self.x == 0 || self.y == 0 {
             return None;
         }
         Some(Location {
@@ -23,7 +23,7 @@ impl Location {
         })
     }
     pub fn top_right(&self) -> Option<Location> {
-        if (self.y == 0) {
+        if self.y == 0 {
             return None;
         }
         Some(Location {
