@@ -1,4 +1,5 @@
 use colored::Colorize;
+use itertools::Itertools;
 use std::collections::{HashMap, HashSet};
 use std::fmt::{Debug, Display};
 
@@ -93,6 +94,63 @@ where
             }
             println!();
         }
+    }
+
+    pub fn parse(input: &str, convert: fn(char) -> Option<T>) -> Grid<T> {
+        let locations: HashMap<Location, T> = input
+            .lines()
+            .enumerate()
+            .flat_map(|(y, line)| {
+                line.chars().enumerate().filter_map(move |(x, c)| {
+                    let c = convert(c)?;
+                    Some((
+                        Location {
+                            x: x as u32,
+                            y: y as u32,
+                        },
+                        c,
+                    ))
+                })
+            })
+            .collect();
+
+        Grid { locations }
+    }
+
+    pub fn get_surrounding_locations(&self, current_position: &Location) -> Vec<(Location, &T)> {
+        let max_location = self.max_location();
+
+        vec![
+            // top
+            (0_i32, -1_i32),
+            // right
+            (1_i32, 0_i32),
+            // bottom
+            (0_i32, 1_i32),
+            // left
+            (-1_i32, 0_i32),
+        ]
+        .into_iter()
+        .flat_map(|(x, y)| {
+            let x = current_position.x as i32 - x;
+            let y = current_position.y as i32 - y;
+
+            // skip out of bounds
+            if x < 0 || y < 0 || x as u32 > max_location.x || y as u32 > max_location.y {
+                return None;
+            }
+
+            self.get(x as u32, y as u32).map(|value| {
+                (
+                    Location {
+                        x: x as u32,
+                        y: y as u32,
+                    },
+                    value,
+                )
+            })
+        })
+        .collect_vec()
     }
 }
 
