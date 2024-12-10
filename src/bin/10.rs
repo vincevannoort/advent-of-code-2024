@@ -57,6 +57,33 @@ fn traverse_path_part_1(
         .collect()
 }
 
+fn traverse_path_part_2(
+    grid: &Grid<u32>,
+    visited_locations: Vec<Location>,
+    location: &Location,
+    height: &u32,
+) -> u32 {
+    if *height == 9 {
+        // count each valid path
+        return 1;
+    }
+
+    let surrounding_locations = find_possible_next_paths(grid, location, height);
+
+    // sum valid locations
+    surrounding_locations
+        .into_iter()
+        .map(|(surround_location, new_height)| {
+            traverse_path_part_2(
+                grid,
+                [visited_locations.clone(), vec![surround_location]].concat(),
+                &surround_location,
+                new_height,
+            )
+        })
+        .sum()
+}
+
 pub fn part_one(input: &str) -> Option<u32> {
     let grid = parse(input);
 
@@ -78,7 +105,20 @@ pub fn part_one(input: &str) -> Option<u32> {
 }
 
 pub fn part_two(input: &str) -> Option<u32> {
-    None
+    let grid = parse(input);
+
+    let zeros = grid
+        .locations
+        .iter()
+        .filter(|(_, height)| **height == 0)
+        .collect_vec();
+
+    let result = zeros
+        .iter()
+        .map(|zero| traverse_path_part_2(&grid, vec![*zero.0], zero.0, zero.1))
+        .sum();
+
+    Some(result)
 }
 
 #[cfg(test)]
