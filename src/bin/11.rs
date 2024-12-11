@@ -33,8 +33,35 @@ pub fn part_one(input: &str) -> Option<u128> {
     Some(stones.len() as u128)
 }
 
+fn blink_two(stones: HashMap<u128, u128>) -> HashMap<u128, u128> {
+    let mut new_stones: HashMap<u128, u128> = HashMap::new();
+
+    for (stone, count) in stones.into_iter() {
+        for stone in apply_rules(stone) {
+            *new_stones.entry(stone).or_insert(0) += count;
+        }
+    }
+
+    new_stones
+}
+
 pub fn part_two(input: &str) -> Option<u128> {
-    None
+    let stones: Vec<u128> = input
+        .split_whitespace()
+        .map(|number| number.parse().unwrap())
+        .collect();
+
+    let mut stones: HashMap<u128, u128> =
+        stones.into_iter().fold(HashMap::new(), |mut acc, key| {
+            *acc.entry(key).or_insert(0) += 1;
+            acc
+        });
+
+    for _ in 0..75 {
+        stones = blink_two(stones);
+    }
+
+    Some(stones.into_values().sum())
 }
 
 #[cfg(test)]
