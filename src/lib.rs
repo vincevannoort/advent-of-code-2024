@@ -62,8 +62,17 @@ where
         self.locations.get(&Location { x, y })
     }
 
-    pub fn get_by_location(&self, loc: &Location) -> Option<&T> {
-        self.locations.get(&loc)
+    pub fn get_by_location(&self, location: &Location) -> Option<&T> {
+        self.locations.get(location)
+    }
+
+    pub fn min_location(&self) -> Location {
+        let (max_x_location, _) = self.locations.iter().min_by_key(|l| l.0.x).unwrap();
+        let (max_y_location, _) = self.locations.iter().min_by_key(|l| l.0.y).unwrap();
+        Location {
+            x: max_x_location.x,
+            y: max_y_location.y,
+        }
     }
 
     pub fn max_location(&self) -> Location {
@@ -89,7 +98,12 @@ where
                         _ => print!("{entity}"),
                     };
                 } else {
-                    print!(" ")
+                    match highlights {
+                        Some(highlights) if highlights.contains(&location) => {
+                            print!("{}", ".".to_string().on_bright_magenta())
+                        }
+                        _ => print!("."),
+                    };
                 }
             }
             println!();
@@ -132,8 +146,8 @@ where
         ]
         .into_iter()
         .flat_map(|(x, y)| {
-            let x = current_position.x as i32 - x;
-            let y = current_position.y as i32 - y;
+            let x = current_position.x as i32 + x;
+            let y = current_position.y as i32 + y;
 
             // skip out of bounds
             if x < 0 || y < 0 || x as u32 > max_location.x || y as u32 > max_location.y {
