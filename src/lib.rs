@@ -93,14 +93,14 @@ where
                 if let Some(entity) = self.locations.get(&location) {
                     match highlights {
                         Some(highlights) if highlights.contains(&location) => {
-                            print!("{}", format!("{entity}").on_bright_magenta())
+                            print!("{:?}", format!("{entity}").on_bright_magenta())
                         }
                         _ => print!("{entity}"),
                     };
                 } else {
                     match highlights {
                         Some(highlights) if highlights.contains(&location) => {
-                            print!("{}", ".".to_string().on_bright_magenta())
+                            print!("{:?}", ".".to_string().on_bright_magenta())
                         }
                         _ => print!("."),
                     };
