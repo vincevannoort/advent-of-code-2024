@@ -1,5 +1,3 @@
-extern crate termion;
-
 use advent_of_code::{Direction, Grid, Location};
 use itertools::Itertools;
 advent_of_code::solution!(15);
