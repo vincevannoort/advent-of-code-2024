@@ -66,6 +66,41 @@ where
         self.locations.get(location)
     }
 
+    pub fn get_by_direction(
+        &self,
+        current_location: &Location,
+        direction: Direction,
+    ) -> Option<(Location, &T)> {
+        if matches!(direction, Direction::Up) && current_location.y == 0 {
+            return None;
+        };
+        if matches!(direction, Direction::Left) && current_location.x == 0 {
+            return None;
+        };
+
+        let new_location = match direction {
+            Direction::Up => Location {
+                x: current_location.x,
+                y: current_location.y - 1,
+            },
+            Direction::Right => Location {
+                x: current_location.x + 1,
+                y: current_location.y,
+            },
+            Direction::Down => Location {
+                x: current_location.x,
+                y: current_location.y + 1,
+            },
+            Direction::Left => Location {
+                x: current_location.x - 1,
+                y: current_location.y,
+            },
+        };
+
+        self.get_by_location(&new_location)
+            .map(|value| (new_location, value))
+    }
+
     pub fn min_location(&self) -> Location {
         let (max_x_location, _) = self.locations.iter().min_by_key(|l| l.0.x).unwrap();
         let (max_y_location, _) = self.locations.iter().min_by_key(|l| l.0.y).unwrap();
@@ -93,14 +128,14 @@ where
                 if let Some(entity) = self.locations.get(&location) {
                     match highlights {
                         Some(highlights) if highlights.contains(&location) => {
-                            print!("{:?}", format!("{entity}").on_bright_magenta())
+                            print!("{:}", format!("{entity}").on_bright_magenta())
                         }
                         _ => print!("{entity}"),
                     };
                 } else {
                     match highlights {
                         Some(highlights) if highlights.contains(&location) => {
-                            print!("{:?}", ".".to_string().on_bright_magenta())
+                            print!("{:}", ".".to_string().on_bright_magenta())
                         }
                         _ => print!("."),
                     };
@@ -108,6 +143,11 @@ where
             }
             println!();
         }
+    }
+
+    pub fn display_location(&self, location: &Location) {
+        let location = HashSet::from_iter(vec![*location]);
+        self.display(Some(&location));
     }
 
     pub fn parse(input: &str, convert: fn(char) -> Option<T>) -> Grid<T> {
