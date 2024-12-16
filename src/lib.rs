@@ -137,7 +137,7 @@ where
                         Some(highlights) if highlights.contains(&location) => {
                             print!("{:}", ".".to_string().on_bright_magenta())
                         }
-                        _ => print!("."),
+                        _ => print!(" "),
                     };
                 }
             }
@@ -171,7 +171,10 @@ where
         Grid { locations }
     }
 
-    pub fn get_surrounding_locations(&self, current_position: &Location) -> Vec<(Location, &T)> {
+    pub fn get_optional_surrounding_locations(
+        &self,
+        current_position: &Location,
+    ) -> Vec<Option<(Location, &T)>> {
         let max_location = self.max_location();
 
         vec![
@@ -185,7 +188,7 @@ where
             (-1_i32, 0_i32),
         ]
         .into_iter()
-        .flat_map(|(x, y)| {
+        .map(|(x, y)| {
             let x = current_position.x as i32 + x;
             let y = current_position.y as i32 + y;
 
@@ -205,6 +208,13 @@ where
             })
         })
         .collect_vec()
+    }
+
+    pub fn get_surrounding_locations(&self, current_position: &Location) -> Vec<(Location, &T)> {
+        self.get_optional_surrounding_locations(current_position)
+            .into_iter()
+            .flatten()
+            .collect_vec()
     }
 }
 
