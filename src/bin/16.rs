@@ -2,7 +2,7 @@ use std::collections::HashSet;
 
 use advent_of_code::{Direction, Grid, Location};
 use itertools::Itertools;
-use pathfinding::prelude::dijkstra;
+use pathfinding::prelude::{astar_bag, dijkstra};
 
 advent_of_code::solution!(16);
 
@@ -100,7 +100,57 @@ pub fn part_one(input: &str) -> Option<u32> {
 }
 
 pub fn part_two(input: &str) -> Option<u32> {
-    None
+    let mut grid = Grid::parse(input, Some);
+    let (start, _) = remove_entry(&mut grid, 'S');
+    let (end, _) = remove_entry(&mut grid, 'E');
+
+    let results = astar_bag(
+        &(start, Direction::Up),
+        |p| {
+            // get surrounding locations
+            let (up, right, down, left) = grid
+                .get_optional_surrounding_locations(&p.0)
+                .into_iter()
+                .collect_tuple()
+                .unwrap();
+
+            let up = map_successor(up, p.1, Direction::Up);
+            let right = map_successor(right, p.1, Direction::Right);
+            let down = map_successor(down, p.1, Direction::Down);
+            let left = map_successor(left, p.1, Direction::Left);
+
+            let successors = vec![up, right, down, left]
+                .into_iter()
+                .flatten()
+                .collect_vec();
+
+            // println!();
+            // println!("=============================================");
+            // grid.display_location(&p.0);
+            // dbg!((up, right, down, left));
+            // dbg!(p, &successors);
+
+            successors
+        },
+        |p| 0,
+        |p| p.0 == end,
+    )
+    .unwrap();
+
+    let visited_locations: HashSet<Location> = HashSet::from_iter(
+        results
+            .0
+            .flat_map(|result| result.iter().map(|item| item.0).collect_vec())
+            .collect_vec(),
+    );
+
+    // display way
+    // grid.display(Some(&HashSet::from_iter(
+    //     result.0.iter().map(|successor| successor.0).collect_vec(),
+    // )));
+
+    // Some(result.1 + 1000)
+    Some(visited_locations.len() as u32)
 }
 
 #[cfg(test)]
