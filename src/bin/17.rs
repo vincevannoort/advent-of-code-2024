@@ -181,7 +181,26 @@ pub fn part_one(input: &str) -> Option<String> {
 }
 
 pub fn part_two(input: &str) -> Option<u64> {
-    None
+    let strange_device = parse(input);
+    let program = strange_device
+        .program
+        .iter()
+        .map(|out| out.to_string())
+        .collect_vec()
+        .join(",");
+
+    let result = (0..u64::MAX).into_par_iter().find_first(|i| {
+        if i.rem(1000u64) == 0 {
+            println!("running: {i}");
+        }
+        // for i in 0..=5 {
+        let mut copied_strange_device = strange_device.clone();
+        copied_strange_device.register_a = *i;
+        let output = copied_strange_device.complete();
+
+        program == output
+    });
+    result
 }
 
 #[cfg(test)]
