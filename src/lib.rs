@@ -56,7 +56,7 @@ pub struct Grid<T> {
 
 impl<T> Grid<T>
 where
-    T: Display,
+    T: Display + Clone,
 {
     pub fn get(&self, x: u32, y: u32) -> Option<&T> {
         self.locations.get(&Location { x, y })
@@ -215,6 +215,18 @@ where
             .into_iter()
             .flatten()
             .collect_vec()
+    }
+
+    pub fn fill_remaining(&mut self, fill: T) {
+        let max_location = self.max_location();
+
+        for y in 0..=max_location.y {
+            for x in 0..=max_location.x {
+                if self.get(x, y).is_none() {
+                    self.locations.insert(Location { x, y }, fill.clone());
+                }
+            }
+        }
     }
 }
 
