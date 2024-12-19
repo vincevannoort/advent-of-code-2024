@@ -71,7 +71,31 @@ pub fn part_one(input: &str) -> Option<u32> {
 }
 
 pub fn part_two(input: &str) -> Option<u32> {
-    None
+    let locations: Vec<(Location, char)> = input
+        .lines()
+        .map(|line| {
+            let (x, y) = line.split_once(",").unwrap();
+            (
+                Location {
+                    x: x.parse().unwrap(),
+                    y: y.parse().unwrap(),
+                },
+                '#',
+            )
+        })
+        .collect_vec();
+
+    // grid with all bytes
+    let full_grid: Grid<char> = Grid {
+        locations: HashMap::from_iter(locations.clone()),
+    };
+
+    let max_location = full_grid.max_location();
+
+    let result = (1..locations.len())
+        .find(|bytes| find_solution_for_bytes(&locations, max_location, *bytes as u32).is_none());
+
+    result.map(|result| result as u32)
 }
 
 #[cfg(test)]
