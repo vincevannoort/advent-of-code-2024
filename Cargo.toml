@@ -20,6 +20,7 @@ today = ["chrono"]
 test_lib = []
 
 [dependencies]
+cached = "0.54.0"
 
 # Template dependencies
 chrono = { version = "0.4.38", optional = true }
@@ -27,8 +28,10 @@ colored = "2.1.0"
 dhat = { version = "0.3.3", optional = true }
 indoc = "2.0.5"
 itertools = "0.13.0"
+lazy_static = "1.5.0"
 pathfinding = "4.12.0"
 pico-args = "0.5.0"
+rand = "0.8.5"
 rayon = "1.10.0"
 regex = "1.11.1"
 tinyjson = "2.5.1"
