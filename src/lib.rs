@@ -56,7 +56,7 @@ pub struct Grid<T> {
 
 impl<T> Grid<T>
 where
-    T: Display + Clone,
+    T: Display + Clone + PartialEq,
 {
     pub fn get(&self, x: u32, y: u32) -> Option<&T> {
         self.locations.get(&Location { x, y })
@@ -227,6 +227,25 @@ where
                 }
             }
         }
+    }
+
+    pub fn find_point_of_interest_and_replace(&mut self, interest: T, replace: T) -> (Location, T) {
+        let removed = self
+            .locations
+            .remove_entry(
+                &self
+                    .locations
+                    .iter()
+                    .find(|(_, c)| **c == interest)
+                    .unwrap()
+                    .0
+                    .clone(),
+            )
+            .unwrap();
+
+        self.locations.insert(removed.0, replace);
+
+        removed
     }
 }
 
