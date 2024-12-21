@@ -4,7 +4,7 @@ use std::collections::{HashMap, HashSet};
 
 use advent_of_code::{Grid, Location};
 use itertools::Itertools;
-use pathfinding::prelude::{astar, astar_bag, astar_bag_collect};
+use pathfinding::prelude::{astar, astar_bag, astar_bag_collect, dijkstra_all};
 
 advent_of_code::solution!(20);
 
@@ -132,6 +132,14 @@ fn find_cheatable_locations(grid: &Grid<char>) -> HashMap<Location, Vec<(Locatio
 #[derive(PartialEq, Clone, Debug, Eq, Hash, PartialOrd, Ord)]
 struct Cheated(bool);
 
+fn get_successors(grid: &Grid<char>, p: &Location) -> Vec<(Location, u32)> {
+    grid.get_surrounding_locations(p)
+        .iter()
+        .filter(|l| *l.1 == '.')
+        .map(|l| (l.0, 1))
+        .collect_vec()
+}
+
 pub fn part_one(input: &str) -> Option<u32> {
     let mut grid = Grid::parse(input, Some);
     grid.display(None);
@@ -139,80 +147,34 @@ pub fn part_one(input: &str) -> Option<u32> {
     let (end, _) = grid.find_point_of_interest_and_replace('E', '.');
     let cheatable_locations = find_cheatable_locations(&grid);
 
-    let normal_path = astar(
-        &(start),
-        |p| {
-            let surrounding_locations = grid
-                .get_surrounding_locations(p)
-                .iter()
-                .filter(|l| *l.1 == '.')
-                .map(|l| (l.0, 1))
-                .collect_vec();
-
-            surrounding_locations
-        },
-        // manhattan distance for heuristic
-        |p| p.y.abs_diff(end.y) + p.x.abs_diff(end.x),
-        |p| *p == end,
-    )
-    .unwrap();
+    let mut start_to_any = dijkstra_all(&(start), |p| get_successors(&grid, p));
+    let mut end_to_any = dijkstra_all(&(end), |p| get_successors(&grid, p));
+    start_to_any.insert(start, (start, 0));
+    end_to_any.insert(end, (end, 0));
+    let normal_length = start_to_any.get(&end).unwrap().1;
 
     let cheatable_locations_best_paths = cheatable_locations
         .iter()
-        // .filter(|p| p.0.x == 7 && p.0.y == 7)
         .flat_map(|(start, ends)| ends.iter().map(|end| (start.clone(), end.0, end.1)))
         .filter_map(|(cheat_start, cheat_end, cost)| {
-            let path = astar(
-                &(start, Cheated(false)),
-                |(p, cheated)| {
-                    let mut surrounding_locations = grid
-                        .get_surrounding_locations(p)
-                        .iter()
-                        .filter(|l| *l.1 == '.')
-                        .map(|l| ((l.0, cheated.clone()), 1))
-                        .collect_vec();
+            let from_start_to_cheat_start = start_to_any.get(&cheat_start).unwrap();
+            let from_finish_to_cheat_end = end_to_any.get(&cheat_end).unwrap();
 
-                    // if we havent cheated yet
-                    if !cheated.0 && *p == cheat_start {
-                        surrounding_locations.push(((cheat_end, Cheated(true)), cost));
-                    }
-
-                    surrounding_locations
-                },
-                // manhattan distance for heuristic
-                |(p, cheated)| p.y.abs_diff(end.y) + p.x.abs_diff(end.x),
-                |(p, cheated)| *p == end,
-            )
-            .unwrap();
-
-            // if the shortest path does not include the cheat
-            if !path.0.last().unwrap().1 .0 {
+            let cost = from_start_to_cheat_start.1 + cost + from_finish_to_cheat_end.1;
+            if cost > normal_length {
                 return None;
             }
-
-            // if the shortest path that does include cheat is not faster
-            if normal_path.1 == path.1 {
-                return None;
-            }
-
-            Some(normal_path.1 - path.1)
+            Some(normal_length - cost)
         })
         .sorted()
         .collect_vec();
 
-    // dbg!(&cheatable_locations_best_paths);
+    let count = cheatable_locations_best_paths
+        .into_iter()
+        .filter(|c| *c >= 100)
+        .count();
 
-    let mut total = 0;
-    let mut count = 0;
-    for cheat in cheatable_locations_best_paths.iter().rev() {
-        total += cheat;
-        count += 1;
-        if total >= 100 {
-            break;
-        }
-    }
-
-    Some(count)
+    Some(count as u32)
 }
 
 pub fn part_two(input: &str) -> Option<u32> {
@@ -226,7 +188,7 @@ mod tests {
     #[test]
     fn test_part_one() {
         let result = part_one(&advent_of_code::template::read_file("examples", DAY));
-        assert_eq!(result, Some(2));
+        assert_eq!(result, Some(0));
     }
 
     #[test]
