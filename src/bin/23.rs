@@ -1,8 +1,4 @@
 use itertools::{self, Itertools};
-use rayon::{
-    self,
-    iter::{IntoParallelRefIterator, ParallelIterator},
-};
 use std::collections::{HashMap, HashSet};
 
 advent_of_code::solution!(23);
@@ -38,6 +34,12 @@ fn get_combination<'a>(
     connections
         .keys()
         .combinations(n.try_into().unwrap())
+        // prune, all these should atleast be connnected to n - 1 computers
+        .filter(|combination| {
+            combination.iter().all(|computer| {
+                connections.get(*computer).unwrap().len() >= (n - 1).try_into().unwrap()
+            })
+        })
         .collect_vec()
 }
 
@@ -50,9 +52,10 @@ fn check_inter_connected<'a>(
         return false;
     }
 
-    combination.par_iter().all(|computer| {
+    combination.iter().all(|computer| {
         let computer_connections = connections.get(*computer).unwrap();
-        combination.par_iter().all(|other_computer| {
+
+        combination.iter().all(|other_computer| {
             if computer == other_computer {
                 return true;
             }
@@ -76,21 +79,34 @@ pub fn part_one(input: &str) -> Option<u32> {
 pub fn part_two(input: &str) -> Option<String> {
     let connections: HashMap<&str, HashSet<&str>> = parse_connections(input);
 
-    let mut result = None;
-    for i in (0..connections.keys().len()).rev() {
-        let combinations: Vec<Vec<&&str>> = get_combination(&connections, i.try_into().unwrap());
+    let max_connections = connections
+        .iter()
+        .map(|(computer, other_computers)| {
+            let mut other_computers = other_computers.iter().cloned().collect_vec();
 
-        let inter_connected_computers = combinations
-            .iter()
-            .find(|combination| check_inter_connected(&connections, combination, true));
+            let mut subset: HashSet<&str> = HashSet::new();
+            subset.insert(computer);
 
-        if let Some(inter_connected_computers) = inter_connected_computers {
-            result = Some(inter_connected_computers.clone());
-            break;
-        }
-    }
+            loop {
+                let other_computer = other_computers.pop();
+                let Some(other_computer) = other_computer else {
+                    break;
+                };
 
-    Some(result.unwrap().iter().sorted().join(","))
+                let other_computer_connections = connections.get(other_computer).unwrap();
+
+                // if it is not connected, we skip adding it to the subset
+                if !other_computer_connections.is_superset(&subset) {
+                    continue;
+                }
+
+                subset.insert(other_computer);
+            }
+            subset
+        })
+        .max_by_key(|subset| subset.len());
+
+    Some(max_connections.unwrap().iter().sorted().join(","))
 }
 
 #[cfg(test)]
